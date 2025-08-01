@@ -9,10 +9,13 @@ from news.models import News, Comment
 
 User = get_user_model()
 
+
 class TestRoutes(TestCase):
+    """Класс для тестирования маршрутов."""
 
     @classmethod
     def setUpTestData(cls):
+        """Метод, подготавливающий данные для тестов."""
         cls.news = News.objects.create(title='Заголовок', text='Текст')
         cls.author = User.objects.create(username='Лев Толстой')
         cls.reader = User.objects.create(username='Читатель простой')
@@ -23,6 +26,7 @@ class TestRoutes(TestCase):
         )
 
     def test_pages_availability(self):
+        """Тест доступности страниц для неавторизованного пользователя."""
         urls = (
             ('news:home', None),
             ('news:detail', {'pk': self.news.pk}),
@@ -37,6 +41,7 @@ class TestRoutes(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_availability_for_comment_edit_and_delete(self):
+        """Тест доступности страниц редактирования и удаления комментария."""
         users_and_statuses = (
             (self.author, HTTPStatus.OK),
             (self.reader, HTTPStatus.NOT_FOUND)
@@ -50,6 +55,7 @@ class TestRoutes(TestCase):
                     self.assertEqual(response.status_code, status)
 
     def test_redirect_for_anonymous_client(self):
+        """Тест редиректов для неавторизованных пользователей."""
         login_url = reverse('users:login')
         for name in ('news:edit', 'news:delete'):
             with self.subTest(name=name):
