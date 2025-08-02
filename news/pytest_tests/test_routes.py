@@ -39,7 +39,7 @@ def test_pages_availability_for_anonymous_user(name, args, client):
     ('news:edit', 'news:delete')
 )
 def test_availability_for_different_users(
-    parametrized_clients, expected_status, name, news, comment
+    parametrized_clients, expected_status, name, comment, news
 ):
     """Тест доступности страниц для разных пользователей."""
     url = reverse(name, args=(comment.id,))

@@ -1,7 +1,10 @@
-import pytest
-from django.test.client import Client
+from datetime import datetime, timedelta
 
-from news.models import News, Comment
+import pytest
+from django.conf import settings
+from django.test.client import Client
+from django.utils import timezone
+from news.models import Comment, News
 
 
 @pytest.fixture
@@ -33,11 +36,26 @@ def not_author_client(not_author):
 
 
 @pytest.fixture
+def news_to_pagginate():
+    """Фикстура для создания новостей."""
+    today = datetime.today()
+    news_to_pagginate = News.objects.bulk_create(
+        News(
+            title=f'Новость {index}',
+            text='Просто текст.',
+            date=today - timedelta(days=index)
+        )
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
+        )
+    return news_to_pagginate
+
+
+@pytest.fixture
 def news():
     """Фикстура для создания новости."""
     news = News.objects.create(
         title='Заголовок',
-        text='Текст.'
+        text='Просто текст.'
     )
     return news
 
@@ -51,6 +69,19 @@ def comment(author, news):
         text='Текст комментария'
     )
     return comment
+
+
+@pytest.fixture
+def comment_to_pagginate(news, author):
+    """Фикстура для создания комментариев."""
+    now = timezone.now()
+    for index in range(10):
+        comment_to_pagginate = Comment.objects.create(
+            news=news, author=author, text=f'Текст {index}'
+        )
+        comment_to_pagginate.created = now + timedelta(days=index)
+        comment_to_pagginate.save()
+    return comment_to_pagginate
 
 
 @pytest.fixture
