@@ -29,11 +29,11 @@ def test_pages_availability_for_anonymous_user(name, args, client):
 
 
 @pytest.mark.parametrize(
-        'parametrized_clients, expected_status',
-        (
-            (lf('author_client'), HTTPStatus.OK),
-            (lf('not_author_client'), HTTPStatus.NOT_FOUND)
-        )
+    'parametrized_clients, expected_status',
+    (
+        (lf('author_client'), HTTPStatus.OK),
+        (lf('not_author_client'), HTTPStatus.NOT_FOUND)
+    )
 )
 @pytest.mark.parametrize(
     'name',

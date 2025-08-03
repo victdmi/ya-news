@@ -2,12 +2,11 @@ from http import HTTPStatus
 
 import pytest
 from pytest_django.asserts import assertRedirects, assertFormError
-from pytils.translit import slugify
 
 from django.urls import reverse
 
 from news.forms import BAD_WORDS, WARNING
-from news.models import Comment, News
+from news.models import Comment
 
 
 @pytest.mark.django_db
