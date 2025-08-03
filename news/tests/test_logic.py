@@ -12,11 +12,13 @@ User = get_user_model()
 
 
 class TestCommentCreation(TestCase):
+    """Класс для тестирования логики при создании комментария."""
 
     COMMENT_TEXT = 'Текст комментария'
 
     @classmethod
     def setUpTestData(cls):
+        """Метод, подготавливающий данные для тестов."""
         cls.news = News.objects.create(title='Заголовок', text='Текст')
         cls.url = reverse('news:detail', args=(cls.news.id,))
         cls.user = User.objects.create(username='Мимо Крокодил')
@@ -25,11 +27,13 @@ class TestCommentCreation(TestCase):
         cls.form_data = {'text': cls.COMMENT_TEXT}
 
     def test_anonymous_user_cant_create_comment(self):
+        """Тест невозможности создать комментарий анонимным пользователем."""
         self.client.post(self.url, data=self.form_data)
         comments_count = Comment.objects.count()
         self.assertEqual(comments_count, 0)
 
     def test_user_can_create_comment(self):
+        """Тест возможности создать комментарий автором."""
         response = self.auth_client.post(self.url, data=self.form_data)
         self.assertRedirects(response, f'{self.url}#comments')
         comments_count = Comment.objects.count()
@@ -40,6 +44,7 @@ class TestCommentCreation(TestCase):
         self.assertEqual(comment.author, self.user)
 
     def test_user_cant_use_bad_words(self):
+        """Тест невозможности использовать запрещенные слова."""
         bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}
         response = self.auth_client.post(self.url, data=bad_words_data)
         form = response.context['form']
@@ -53,12 +58,14 @@ class TestCommentCreation(TestCase):
 
 
 class TestCommentEditDelete(TestCase):
+    """Класс для тестирования логики изменения и удаления комментария."""
 
     COMMENT_TEXT = 'Текст комментария'
     NEW_COMMENT_TEXT = 'Обновлённый комментарий'
 
     @classmethod
     def setUpTestData(cls):
+        """Метод, подготавливающий данные для тестов."""
         cls.news = News.objects.create(title='Заголовок', text='Текст')
         news_url = reverse('news:detail', args=(cls.news.id,))
         cls.url_to_comments = news_url + '#comments'
@@ -82,6 +89,7 @@ class TestCommentEditDelete(TestCase):
         cls.form_data = {'text': cls.NEW_COMMENT_TEXT}
 
     def test_author_can_delete_comment(self):
+        """Тест возможности удаления комментария автором."""
         response = self.author_client.delete(self.delete_url)
         self.assertRedirects(response, self.url_to_comments)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
@@ -89,18 +97,21 @@ class TestCommentEditDelete(TestCase):
         self.assertEqual(comments_count, 0)
 
     def test_user_cant_delete_comment_of_another_user(self):
+        """Тест невозможности удаления комментария не автором."""
         response = self.reader_client.delete(self.delete_url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         comments_count = Comment.objects.count()
         self.assertEqual(comments_count, 1)
 
     def test_author_can_edit_comment(self):
+        """Тест возможности изменять комментарий автором."""
         response = self.author_client.post(self.edit_url, data=self.form_data)
         self.assertRedirects(response, self.url_to_comments)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.text, self.NEW_COMMENT_TEXT)
 
     def test_user_cant_edit_comment_of_another_user(self):
+        """Тест невозможности изменять комментарий не автором."""
         response = self.reader_client.post(self.edit_url, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.comment.refresh_from_db()

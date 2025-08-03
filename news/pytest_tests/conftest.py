@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
 import pytest
+
 from django.conf import settings
 from django.test.client import Client
 from django.utils import timezone
+
 from news.models import Comment, News
 
 
@@ -88,3 +90,9 @@ def comment_to_pagginate(news, author):
 def news_pk_for_args(news):
     """Фикстура возвращает news_pk."""
     return (news.pk,)
+
+
+@pytest.fixture
+def form_data():
+    """Фикстура для возврата словаря."""
+    return {'text': 'Новый текст'}
