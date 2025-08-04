@@ -1,16 +1,13 @@
 from http import HTTPStatus
 
 import pytest
-from pytest_django.asserts import assertRedirects, assertFormError
-
-from django.urls import reverse
+from pytest_django.asserts import assertFormError, assertRedirects
 
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
 
 
 FORM_DATA = {'text': 'Новый текст'}
-
 pytestmark = pytest.mark.django_db
 
 
@@ -37,7 +34,7 @@ def test_user_can_create_comment(author, author_client, news, urls):
     assert new_comment.author == author
 
 
-def test_user_cant_use_bad_words(news, author_client, urls):
+def test_user_cant_use_bad_words(author_client, urls):
     """Тест невозможности использовать запрещенные слова."""
     bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}
     comments_count_before = Comment.objects.count()
@@ -51,7 +48,7 @@ def test_user_cant_use_bad_words(news, author_client, urls):
     assert comments_count_before == comments_count_after
 
 
-def test_author_can_delete_comment(author_client, comment, news, urls):
+def test_author_can_delete_comment(author_client, urls):
     """Тест возможности удаления комментария автором."""
     comments_count_before = Comment.objects.count()
     response = author_client.post(urls['DELETE'])
@@ -61,7 +58,7 @@ def test_author_can_delete_comment(author_client, comment, news, urls):
 
 
 def test_user_cant_delete_comment_of_another_user(
-    not_author_client, comment, news, urls
+    not_author_client, urls
 ):
     """Тест невозможности удаления комментария не автором."""
     comments_count_before = Comment.objects.count()
@@ -71,7 +68,7 @@ def test_user_cant_delete_comment_of_another_user(
     assert comments_count_before == comments_count_after
 
 
-def test_author_can_edit_comment(author_client, comment, news, urls):
+def test_author_can_edit_comment(author_client, comment, urls):
     """Тест возможности изменять комментарий автором."""
     response = author_client.post(urls['EDIT'], data=FORM_DATA)
     assertRedirects(response, f'{urls['NEWS_DETAIL']}#comments')
@@ -80,7 +77,7 @@ def test_author_can_edit_comment(author_client, comment, news, urls):
 
 
 def test_user_cant_edit_comment_of_another_user(
-    not_author_client, comment, news, urls
+    not_author_client, comment, urls
 ):
     """Тест невозможности изменять комментарий не автором."""
     response = not_author_client.post(urls['EDIT'], data=FORM_DATA)

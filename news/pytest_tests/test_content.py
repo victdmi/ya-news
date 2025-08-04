@@ -1,7 +1,5 @@
 import pytest
 
-from django.urls import reverse
-
 from news.forms import CommentForm
 from yanews.settings import NEWS_COUNT_ON_HOME_PAGE
 
@@ -36,13 +34,13 @@ def test_comment_order(news, comment_to_pagginate, not_author_client, urls):
     assert all_timestamps == sorted_timestamps
 
 
-def test_anonymous_client_has_no_form(news, client, urls):
+def test_anonymous_client_has_no_form(client, urls):
     """Тест отсутствия формы комментария для неавторизованного пользователя."""
     response = client.get(urls['NEWS_DETAIL'])
     assert 'form' not in response.context
 
 
-def test_authorized_client_has_form(news, author_client, urls):
+def test_authorized_client_has_form(author_client, urls):
     """Тест наличия формы комментария для авторизованного пользователя."""
     response = author_client.get(urls['NEWS_DETAIL'])
     assert 'form' in response.context
