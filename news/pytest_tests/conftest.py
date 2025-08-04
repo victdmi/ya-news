@@ -1,9 +1,7 @@
-from datetime import datetime, timedelta
-
 import pytest
-
 from django.conf import settings
 from django.test.client import Client
+from django.urls import reverse
 from django.utils import timezone
 
 from news.models import Comment, News
@@ -40,12 +38,12 @@ def not_author_client(not_author):
 @pytest.fixture
 def news_to_pagginate():
     """Фикстура для создания новостей."""
-    today = datetime.today()
+    today = timezone.now().date()
     news_to_pagginate = News.objects.bulk_create(
         News(
             title=f'Новость {index}',
             text='Просто текст.',
-            date=today - timedelta(days=index)
+            date=today - timezone.timedelta(days=index)
         )
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     )
@@ -55,22 +53,20 @@ def news_to_pagginate():
 @pytest.fixture
 def news():
     """Фикстура для создания новости."""
-    news = News.objects.create(
+    return News.objects.create(
         title='Заголовок',
         text='Просто текст.'
     )
-    return news
 
 
 @pytest.fixture
 def comment(author, news):
     """Фикстура для создания комментария."""
-    comment = Comment.objects.create(
+    return Comment.objects.create(
         news=news,
         author=author,
         text='Текст комментария'
     )
-    return comment
 
 
 @pytest.fixture
@@ -81,18 +77,20 @@ def comment_to_pagginate(news, author):
         comment_to_pagginate = Comment.objects.create(
             news=news, author=author, text=f'Текст {index}'
         )
-        comment_to_pagginate.created = now + timedelta(days=index)
+        comment_to_pagginate.created = now + timezone.timedelta(days=index)
         comment_to_pagginate.save()
     return comment_to_pagginate
 
 
 @pytest.fixture
-def news_pk_for_args(news):
-    """Фикстура возвращает news_pk."""
-    return (news.pk,)
-
-
-@pytest.fixture
-def form_data():
-    """Фикстура для возврата словаря."""
-    return {'text': 'Новый текст'}
+def urls(news, comment):
+    """Фикстура для возврата url адресов."""
+    return {
+        'HOME': reverse('news:home'),
+        'NEWS_DETAIL': reverse('news:detail', args=(news.id,)),
+        'LOGIN': reverse('users:login'),
+        'SIGNUP': reverse('users:signup'),
+        'LOGOUT': reverse('users:logout'),
+        'DELETE': reverse('news:delete', args=(comment.id,)),
+        'EDIT': reverse('news:edit', args=(comment.id,))
+    }

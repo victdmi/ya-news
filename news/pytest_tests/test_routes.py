@@ -10,26 +10,21 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.parametrize(
-    'name, args',
+    'url_key',
     (
-        ('news:home', None),
-        ('news:detail', pytest.lazy_fixture('news_pk_for_args')),
-        ('users:login', None),
-        ('users:signup', None)
-
+        'HOME',
+        'NEWS_DETAIL',
+        'LOGIN',
+        'SIGNUP',
+        'LOGOUT'
     )
 )
-def test_pages_availability_for_anonymous_user(name, args, client):
+def test_pages_availability_for_anonymous_user(url_key, client, urls):
     """Тест доступности страниц для неавторизованных пользователей."""
-    url = reverse(name, args=args)
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
-
-
-def test_logout_page(client):
-    """Тест страницы logout."""
-    url = reverse('users:logout')
-    response = client.post(url)
+    if url_key == 'LOGOUT':
+        response = client.post(urls[url_key])
+    else:
+        response = client.get(urls[url_key])
     assert response.status_code == HTTPStatus.OK
 
 
@@ -41,26 +36,29 @@ def test_logout_page(client):
     )
 )
 @pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete')
+    'url_key',
+    (
+        'EDIT',
+        'DELETE'
+    )
 )
 def test_availability_for_different_users(
-    parametrized_clients, expected_status, name, comment, news
+    parametrized_clients, expected_status, url_key, urls
 ):
     """Тест доступности страниц для разных пользователей."""
-    url = reverse(name, args=(comment.id,))
-    response = parametrized_clients.get(url)
+    response = parametrized_clients.get(urls[url_key])
     assert response.status_code == expected_status
 
 
 @pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete')
+    'url_key',
+    (
+        'EDIT',
+        'DELETE'
+    )
 )
-def test_redirects_for_anonymous_users(name, comment, client):
+def test_redirects_for_anonymous_users(url_key, client, urls):
     """Тест редиректов для неавторизованных пользователей."""
-    login_url = reverse('users:login')
-    url = reverse(name, args=(comment.id,))
-    response = client.get(url)
-    expected_url = f'{login_url}?next={url}'
+    response = client.get(urls[url_key])
+    expected_url = f'{urls['LOGIN']}?next={urls[url_key]}'
     assertRedirects(response, expected_url)
