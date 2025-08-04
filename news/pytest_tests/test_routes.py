@@ -2,7 +2,6 @@ from http import HTTPStatus
 
 import pytest
 from pytest_django.asserts import assertRedirects
-from pytest_lazy_fixtures import lf
 
 from django.urls import reverse
 
@@ -14,9 +13,8 @@ pytestmark = pytest.mark.django_db
     'name, args',
     (
         ('news:home', None),
-        ('news:detail', lf('news_pk_for_args')),
+        ('news:detail', pytest.lazy_fixture('news_pk_for_args')),
         ('users:login', None),
-        ('users:logout', None),
         ('users:signup', None)
 
     )
@@ -28,11 +26,18 @@ def test_pages_availability_for_anonymous_user(name, args, client):
     assert response.status_code == HTTPStatus.OK
 
 
+def test_logout_page(client):
+    """Тест страницы logout."""
+    url = reverse('users:logout')
+    response = client.post(url)
+    assert response.status_code == HTTPStatus.OK
+
+
 @pytest.mark.parametrize(
     'parametrized_clients, expected_status',
     (
-        (lf('author_client'), HTTPStatus.OK),
-        (lf('not_author_client'), HTTPStatus.NOT_FOUND)
+        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
+        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND)
     )
 )
 @pytest.mark.parametrize(
